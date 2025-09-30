@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚔️ ChatGPT | BGBxTECH ⚔️</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --transition-speed: 600ms;
+      --accent: #8a2be2;
+      --cyan: #00bfff;
+      --glow-a: #ff00ff;
+      --glow-b: #00bfff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      color: #fff;
+      overflow: hidden;
+      display: flex; justify-content: center; align-items: center;
+      background-image:
+        radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%),
+        linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+    body.hyper { animation-duration: 6s; }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Layers */
+    #stars-container, #comet-canvas {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Stars */
+    .star {
+      position: absolute; width: 2px; height: 2px;
+      background: #fff; border-radius: 50%;
+      animation: move-stars 50s linear infinite, twinkle 3s infinite alternate;
+      opacity: 0.7;
+    }
+    body.hyper .star { animation-duration: 25s, 1.5s; }
+    @keyframes move-stars { from { transform: translateY(0); } to { transform: translateY(-2000px); } }
+    @keyframes twinkle { from { opacity: .3; } to { opacity: 1; } }
+
+    /* Pages */
+    .page {
+      position: absolute; inset: 0;
+      display: flex; justify-content: center; align-items: center;
+      text-align: center; visibility: hidden; perspective: 1200px;
+    }
+    .page.active { visibility: visible; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      padding: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      transform: scale(0.95);
+      opacity: 0;
+      transition: transform .5s ease-out, opacity .5s ease-out;
+      z-index: 1;
+      max-width: 920px;
+      width: min(92vw, 920px);
+    }
+    .page.active .card.animate-in { animation: fadeInScale var(--transition-speed) ease-out forwards; }
+    @keyframes fadeInScale { to { transform: scale(1); opacity: 1; } }
+
+    /* Flip animations */
+    .page .card.animate-flip-out { animation: flipOut 600ms ease-in forwards; transform-origin: 50% 50%; }
+    @keyframes flipOut { from { transform: rotateY(0) scale(1); opacity: 1; } to { transform: rotateY(-90deg) scale(.9); opacity: 0; } }
+    .page.active .card.animate-flip-in { animation: flipIn 600ms ease-out 200ms forwards; transform-origin: 50% 50%; opacity: 0; }
+    @keyframes flipIn { from { transform: rotateY(90deg) scale(.9); opacity: 0; } to { transform: rotateY(0) scale(1); opacity: 1; } }
+
+    /* Title per-char intro */
+    .glow-text {
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 700;
+      text-shadow: 0 0 10px var(--cyan), 0 0 20px var(--cyan), 0 0 30px var(--cyan);
+      margin-bottom: 6px;
+    }
+    .char {
+      display: inline-block; opacity: 0;
+      transform: translateY(-50px) scale(.5) rotate(360deg);
+      animation: char-in .5s ease forwards;
+    }
+    @keyframes char-in { to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
+
+    .subtitle { opacity: .85; margin-bottom: 10px; }
+
+    /* Countdown circle */
+    .countdown-wrapper { position: relative; width: 160px; height: 160px; margin: 18px auto 24px; display: grid; place-items: center; }
+    .countdown { font-size: 4.2rem; font-weight: 700; color: var(--cyan); z-index: 2; }
+    .countdown-svg { position: absolute; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .countdown-svg-circle, .countdown-svg-circle-bg { fill: none; stroke-width: 8; }
+    .countdown-svg-circle { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .countdown-svg-circle-bg { stroke: rgba(255, 255, 255, 0.14); }
+
+    /* Buttons */
+    .row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .button {
+      display: inline-block; padding: 14px 38px; font-size: 1.05rem; font-weight: 600;
+      border-radius: 50px; cursor: pointer; color: #fff; background: var(--accent);
+      border: none; transition: transform .25s ease, box-shadow .25s ease; position: relative; overflow: hidden;
+    }
+    .button::before {
+      content: ''; position: absolute; inset: 0; left: -100%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,.28), transparent);
+      transition: left .6s ease;
+    }
+    .button:hover::before { left: 100%; }
+    .button:hover { transform: translateY(-4px) scale(1.04); box-shadow: 0 10px 25px rgba(138, 43, 226, .55); }
+    .button:active { transform: scale(.98); }
+
+    /* Parallax tilt for Page 1 */
+    #interactive-card { transform-style: preserve-3d; transition: transform .1s linear, opacity .5s ease-out; }
+
+    /* Page 2 styling */
+    #page2 .card {
+      padding: 0;
+      box-shadow: 0 8px 32px rgba(0,0,0,.37), inset 0 0 22px rgba(138,43,226,.28);
+      border: 1px solid rgba(138,43,226,.45);
+    }
+    #page2 .card-link { display: block; padding: clamp(28px, 6vw, 54px); text-decoration: none; color: inherit; }
+    #page2 .content-wrapper { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+    #page2 .title-group { display: flex; align-items: center; gap: 18px; justify-content: center; flex-wrap: wrap; }
+    #page2 .logo-img { height: 56px; width: 56px; border-radius: 12px; animation: pulse 3s infinite ease-in-out; }
+    #page2 .main-text { font-size: clamp(1.2rem, 3.6vw, 2rem); font-weight: 700; animation: tri-glow 6s linear infinite; white-space: nowrap; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @keyframes tri-glow {
+      0% { text-shadow: 0 0 10px #FF9933; }
+      33% { text-shadow: 0 0 10px #FFFFFF; }
+      66% { text-shadow: 0 0 10px #138808; }
+      100% { text-shadow: 0 0 10px #FF9933; }
+    }
+
+    /* Page 3 – Secret Chamber (locked by default) */
+    #page3 .card {
+      background: rgba(0,0,0,.82);
+      border: 2px solid var(--accent);
+      text-align: center; padding: 56px; color: #fff;
+      box-shadow: 0 0 30px var(--accent), inset 0 0 18px var(--cyan);
+    }
+    .lock-wrap { display: grid; gap: 12px; place-items: center; }
+    .lock {
+      width: 88px; height: 88px; border-radius: 18px;
+      border: 3px solid var(--accent);
+      position: relative; display: grid; place-items: center;
+      box-shadow: 0 0 16px var(--accent);
+      animation: lockPulse 2.2s ease-in-out infinite;
+    }
+    @keyframes lockPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    .lock::before {
+      content: ''; position: absolute; top: -38px; width: 40px; height: 32px;
+      border: 4px solid var(--accent); border-bottom: none; border-radius: 18px 18px 0 0;
+      background: transparent;
+    }
+    .lock .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 14px var(--cyan); }
+    .secret-title { font-size: clamp(1.4rem, 3.6vw, 2.4rem); margin-top: 10px; text-shadow: 0 0 24px var(--glow-a), 0 0 40px var(--glow-b); }
+    .secret-note { margin-top: 6px; opacity: .9; color: #d5c8ff; }
+    .secret-protect { margin-top: 16px; font-weight: 700; letter-spacing: .04em; color: var(--accent); animation: protectGlow 2s infinite alternate; }
+    @keyframes protectGlow { from { text-shadow: 0 0 6px var(--cyan);} to { text-shadow: 0 0 22px var(--glow-a), 0 0 28px var(--glow-b);} }
+
+    /* Unlocked state */
+    #page3.unlocked .lock { border-color: #15ff8a; box-shadow: 0 0 18px #15ff8a; }
+    #page3.unlocked .lock::before { border-color: #15ff8a; }
+    #page3.unlocked .dot { background: #15ff8a; box-shadow: 0 0 14px #15ff8a; }
+    #page3.unlocked .secret-title { text-shadow: 0 0 22px #15ff8a, 0 0 38px #15ff8a; }
+    #page3.unlocked .secret-note { color: #b8ffd5; }
+    #page3.unlocked .secret-protect { color: #15ff8a; }
+
+    /* Page 4 – Showroom grid */
+    #page4 .grid {
+      display: grid;
+      grid-template-columns: repeat( auto-fit, minmax(220px, 1fr) );
+      gap: 16px; width: min(92vw, 1100px);
+    }
+    .app-card {
+      padding: 18px; border-radius: 18px; background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+      transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+      text-align: left; position: relative; overflow: hidden;
+    }
+    .app-card:hover { transform: translateY(-6px) scale(1.02); background: rgba(255,255,255,.08); box-shadow: 0 20px 50px rgba(0,0,0,.36); }
+    .app-card h3 { font-size: 1.1rem; margin-top: 10px; }
+    .app-card p { font-size: .9rem; opacity: .85; margin-top: 6px; }
+    .pill {
+      position: absolute; top: 12px; right: 12px; font-size: .72rem;
+      padding: 4px 10px; border-radius: 999px; background: rgba(138,43,226,.22); border: 1px solid rgba(138,43,226,.6);
+    }
+    .app-icon {
+      width: 56px; height: 56px; border-radius: 12px; object-fit: cover; box-shadow: 0 6px 20px rgba(0,0,0,.3);
+    }
+    .card-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .btn-ghost {
+      font-size: .9rem; padding: 10px 14px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.06);
+      cursor: pointer; color: #fff; transition: .25s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
+
+    /* Page 5 – Hyper Mode banner */
+    #page5 .card {
+      border: 2px solid #fff; box-shadow: 0 0 30px #fff;
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+    }
+    .hyper-title {
+      font-size: clamp(1.6rem, 4.6vw, 3rem);
+      text-shadow: 0 0 14px #fff, 0 0 40px var(--glow-b), 0 0 60px var(--glow-a);
+      letter-spacing: .03em;
+    }
+    .hyper-note { margin-top: 10px; opacity: .9; }
+
+    /* Dev tag – neon flicker */
+    .dev-tag {
+      position: fixed; bottom: 14px; right: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      text-shadow: 0 0 3px var(--accent), 0 0 7px var(--accent);
+      z-index: 3; opacity: .9;
+      animation: neonFlicker 5.5s infinite steps(1, end);
+      user-select: none;
+    }
+    @keyframes neonFlicker {
+      0%, 2%, 6%, 9%, 11%, 100% { opacity: .98; filter: drop-shadow(0 0 8px var(--accent)); }
+      1%, 7%, 10% { opacity: .5; filter: drop-shadow(0 0 0 transparent); }
+      4% { opacity: .2; }
+      8% { opacity: .75; }
+    }
+    .dev-tag:hover::after {
+      content: "  • Protected System Build v1.0";
+      font-weight: 600; opacity: .9;
+    }
+
+    /* Mouse sparks */
+    .spark {
+      position: absolute; width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.88); pointer-events: none;
+      animation: sparkFade 900ms linear forwards;
+      mix-blend-mode: screen;
+    }
+    @keyframes sparkFade { from { transform: translate(-50%, -50%) scale(1); opacity: 1; } to { transform: translate(-50%, -50%) scale(.4); opacity: 0; } }
+
+    /* Responsive tweaks */
+    @media (max-width: 520px) {
+      .card { padding: 26px; }
+      #page2 .card-link { padding: 28px 18px; }
+      .row { gap: 10px; }
+      .button { padding: 12px 22px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- layers -->
+  <div id="stars-container" aria-hidden="true"></div>
+  <canvas id="comet-canvas" aria-hidden="true"></canvas>
+
+  <!-- Page 1 – Intro -->
+  <div class="page active" id="page1">
+    <div class="card" id="interactive-card">
+      <h1 class="glow-text" id="animated-title"></h1>
+      <div class="subtitle">Developer By ⚔️ BGBxTECH ⚔️</div>
+
+      <div class="countdown-wrapper">
+        <svg class="countdown-svg">
+          <circle class="countdown-svg-circle-bg" cx="80" cy="80" r="72"></circle>
+          <circle class="countdown-svg-circle" id="countdown-circle" cx="80" cy="80" r="72"></circle>
+        </svg>
+        <div class="countdown" id="count">5</div>
+      </div>
+
+      <div class="row">
+        <button class="button" onclick="skipCountdown()">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 2 – Primary CTA -->
+  <div class="page" id="page2">
+    <div class="card" id="card2">
+      <a class="card-link" href="https://www.oxaam.com/serviceaccess.php?activation_key=GW69ETWJYL6Y668" target="_blank" rel="noopener">
+        <div class="content-wrapper">
+          <div class="title-group">
+            <img src="https://i.ibb.co/fdFLWbG1/Screenshot-20250930-110205-Google-Play-Store.png" alt="App" class="logo-img" />
+            <h1 class="main-text">ChatGPT 5 Pro Lifetime</h1>
+          </div>
+          <span class="button">Join Now</span>
+        </div>
+      </a>
+
+      <div class="row" style="margin: 16px 0 6px;">
+        <button class="button" onclick="goToShowroom()">Explore Showroom</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 3 – Secret Chamber (BGBxTECH protected) -->
+  <div class="page" id="page3">
+    <div class="card">
+      <div class="lock-wrap">
+        <div class="lock"><div class="dot"></div></div>
+        <h2 class="secret-title">⚔️ BGBxTECH Secret Chamber ⚔️</h2>
+        <div class="secret-note" id="secret-note">Access Denied. Hold <strong>Ctrl</strong> and press <strong>X</strong> to authenticate.</div>
+        <div class="secret-protect">Protected • Do Not Edit</div>
+      </div>
+      <div style="margin-top:18px; opacity:.7; font-size:.95rem;">Tip: Press <kbd>Ctrl</kbd> + <kbd>X</kbd> to unlock.</div>
+    </div>
+  </div>
+
+  <!-- Page 4 – Showroom -->
+  <div class="page" id="page4">
+    <div class="card">
+      <h2 class="glow-text" style="margin-bottom:8px;">Premium Showroom</h2>
+      <div class="subtitle" style="margin-bottom:18px;">Hand-tuned by ⚔️ BGBxTECH ⚔️</div>
+
+      <div class="grid">
+        <!-- sample cards; swap hrefs/images/text as you like -->
+        <div class="app-card">
+          <span class="pill">Top</span>
+          <img class="app-icon" src="https://i.ibb.co/Hp2ZTXM/app1.png" alt="App 1" />
+          <h3>Gemini Ultra Suite</h3>
+          <p>Creative compile, translate, summarize—blazing fast.</p>
+          <div class="card-actions">
+            <a class="btn-ghost" href="#" target="_blank">Open</a>
+            <button class="btn-ghost" onclick="alert('Added to favorites')">Fav</button>
+          </div>
+        </div>
+
+        <div class="app-card">
+          <span class="pill">New</span>
+          <img class="app-icon" src="https://i.ibb.co/60vScpC/app2.png" alt="App 2" />
+          <h3>Vision Studio Max</h3>
+          <p>Image magic with pro color & depth filters.</p>
+          <div class="card-actions">
+            <a class="btn-ghost" href="#" target="_blank">Open</a>
+            <button class="btn-ghost" onclick="alert('Queued for install')">Install</button>
+          </div>
+        </div>
+
+        <div class="app-card">
+          <span class="pill">AI</span>
+          <img class="app-icon" src="https://i.ibb.co/xG1vQmN/app3.png" alt="App 3" />
+          <h3>Code Copilot Pro</h3>
+          <p>Autocomplete & review with secure local cache.</p>
+          <div class="card-actions">
+            <a class="btn-ghost" href="#" target="_blank">Open</a>
+            <button class="btn-ghost" onclick="alert('Subscribed')">Subscribe</button>
+          </div>
+        </div>
+
+        <div class="app-card">
+          <span class="pill">Pro</span>
+          <img class="app-icon" src="https://i.ibb.co/9yv1Q0N/app4.png" alt="App 4" />
+          <h3>Studio Sound FX</h3>
+          <p>Clean, spatialize, and master your audio.</p>
+          <div class="card-actions">
+            <a class="btn-ghost" href="#" target="_blank">Open</a>
+            <button class="btn-ghost" onclick="alert('Added to rack')">Add</button>
+          </div>
+        </div>
+
+        <div class="app-card">
+          <span class="pill">Pro</span>
+          <img class="app-icon" src="https://i.ibb.co/gT1RrZ0/app5.png" alt="App 5" />
+          <h3>Video Studio X</h3>
+          <p>Cinematic cuts, LUTs, motion graphics presets.</p>
+          <div class="card-actions">
+            <a class="btn-ghost" href="#" target="_blank">Open</a>
+            <button class="btn-ghost" onclick="alert('Trial activated')">Trial</button>
+          </div>
+        </div>
+
+        <div class="app-card">
+          <span class="pill">Beta</span>
+          <img class="app-icon" src="https://i.ibb.co/Gv7k5pK/app6.png" alt="App 6" />
+          <h3>RAG Explorer</h3>
+          <p>Hybrid search + memory graphs for knowledge bases.</p>
+          <div class="card-actions">
+            <a class="btn-ghost" href="#" target="_blank">Open</a>
+            <button class="btn-ghost" onclick="alert('Waitlist joined')">Waitlist</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:18px;">
+        <button class="button" onclick="showPage('page2')">Back</button>
+        <button class="button" onclick="showPage('page1')">Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 5 – Hyper Mode -->
+  <div class="page" id="page5">
+    <div class="card">
+      <div class="hyper-title">⚡ HYPER MODE: SYSTEM POWERED BY ⚔️ BGBxTECH ⚔️</div>
+      <div class="hyper-note">Press <kbd>Ctrl</kbd> + <kbd>H</kbd> again to toggle Hyper Mode.</div>
+      <div class="row" style="margin-top:16px;">
+        <button class="button" onclick="showPage('page4')">Back to Showroom</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Developer Tag -->
+  <div class="dev-tag">⚔️ BGBxTECH ⚔️</div>
+
+  <!-- Optional audio hooks (provide your own .mp3 files and uncomment) -->
+  <!--
+  <audio id="sfx-whoosh" src="whoosh.mp3" preload="auto"></audio>
+  <audio id="sfx-unlock" src="unlock.mp3" preload="auto"></audio>
+  -->
+
+  <script>
+    // ===== Element refs
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    const page3 = document.getElementById('page3');
+    const page4 = document.getElementById('page4');
+    const page5 = document.getElementById('page5');
+
+    const titleEl = document.getElementById('animated-title');
+    const countEl = document.getElementById('count');
+    const countdownCircle = document.getElementById('countdown-circle');
+    const card1 = document.getElementById('interactive-card');
+    const card2 = document.getElementById('card2');
+    const secretNote = document.getElementById('secret-note');
+
+    // ===== Countdown setup
+    const initialCount = 5;
+    let count = initialCount;
+    let countdownInterval;
+
+    const R = countdownCircle.r.baseVal.value;
+    const C = 2 * Math.PI * R;
+    countdownCircle.style.strokeDasharray = `${C} ${C}`;
+
+    function setProgress(percent) {
+      const offset = C - (percent / 100) * C;
+      countdownCircle.style.strokeDashoffset = offset;
+    }
+
+    // ===== Stars
+    const starsContainer = document.getElementById('stars-container');
+    const STAR_COUNT = 220;
+    for (let i = 0; i < STAR_COUNT; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 2000}px`;
+      star.style.animationDelay = `${Math.random() * 50}s`;
+      starsContainer.appendChild(star);
+    }
+
+    // ===== Comet canvas
+    const cometCanvas = document.getElementById('comet-canvas');
+    const ctx = cometCanvas.getContext('2d');
+    function resizeCanvas() {
+      cometCanvas.width = innerWidth * devicePixelRatio;
+      cometCanvas.height = innerHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const comets = [];
+    function spawnComet() {
+      comets.push({
+        x: Math.random() * innerWidth,
+        y: innerHeight + 20,
+        vx: -2 - Math.random() * 2,
+        vy: -6 - Math.random() * 3,
+        life: 0,
+        maxLife: 120 + Math.random() * 60
+      });
+      if (comets.length > 24) comets.shift();
+    }
+    setInterval(spawnComet, 1200);
+
+    function drawComets() {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      for (const c of comets) {
+        c.x += c.vx; c.y += c.vy; c.life++;
+        const alpha = 1 - c.life / c.maxLife;
+        ctx.globalAlpha = Math.max(alpha, 0);
+        ctx.beginPath();
+        const len = 120;
+        ctx.moveTo(c.x, c.y);
+        ctx.lineTo(c.x - c.vx * len * 0.06, c.y - c.vy * len * 0.06);
+        ctx.strokeStyle = 'rgba(0, 191, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(drawComets);
+    }
+    requestAnimationFrame(drawComets);
+
+    // ===== Page helpers
+    function showPage(id) {
+      // document.getElementById('sfx-whoosh')?.play(); // optional
+      [page1, page2, page3, page4, page5].forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function animateIn(page) {
+      page.classList.add('active');
+      const card = page.querySelector('.card');
+      if (card) card.classList.add('animate-in');
+    }
+
+    function animateTitle() {
+      const text = "ChatGPT Premium";
+      titleEl.innerHTML = '';
+      text.split('').forEach((char, idx) => {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char === ' ' ? '\u00A0' : char;
+        span.style.animationDelay = `${idx * 50}ms`;
+        titleEl.appendChild(span);
+      });
+    }
+
+    function startCountdown() {
+      setProgress(0);
+      count = initialCount;
+      countEl.textContent = count;
+      countdownInterval = setInterval(() => {
+        count--;
+        countEl.textContent = count;
+        const progress = ((initialCount - count) / initialCount) * 100;
+        setProgress(progress);
+        if (count <= 0) {
+          clearInterval(countdownInterval);
+          setProgress(100);
+          setTimeout(() => transitionToPage2(), 500);
+        }
+      }, 1000);
+    }
+
+    function transitionToPage2() {
+      card1.classList.remove('animate-in');
+      card1.classList.add('animate-flip-out');
+      setTimeout(() => {
+        page1.classList.remove('active');
+        page2.classList.add('active');
+        card2.classList.add('animate-flip-in');
+      }, 200);
+    }
+
+    function skipCountdown() { clearInterval(countdownInterval); transitionToPage2(); }
+    function goToShowroom() { showPage('page4'); }
+
+    // ===== Parallax tilt (Page 1)
+    page1.addEventListener('mousemove', (e) => {
+      if (!page1.classList.contains('active')) return;
+      const rect = card1.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      const rotateY = (x / rect.width) * 25;
+      const rotateX = -(y / rect.height) * 25;
+      card1.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05) translateZ(18px)`;
+    });
+    page1.addEventListener('mouseleave', () => {
+      card1.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
+    });
+
+    // ===== Mouse sparks
+    document.addEventListener('mousemove', (e) => {
+      const spark = document.createElement('div');
+      spark.className = 'spark';
+      spark.style.left = e.pageX + 'px';
+      spark.style.top = e.pageY + 'px';
+      document.body.appendChild(spark);
+      setTimeout(() => spark.remove(), 900);
+    });
+
+    // ===== SECRET: unlock Page 3 (Ctrl + X)
+    let chamberUnlocked = false;
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && (e.key === 'x' || e.key === 'X')) {
+        chamberUnlocked = !chamberUnlocked ? true : true; // one-way unlock
+        // document.getElementById('sfx-unlock')?.play(); // optional
+        page3.classList.add('unlocked');
+        secretNote.textContent = 'Access Granted. Welcome to the BGBxTECH Secret Chamber.';
+        showPage('page3');
+        alert('⚔️ Secret Chamber Unlocked ⚔️');
+      }
+    });
+
+    // ===== HYPER MODE toggle (Ctrl + H)
+    let hyper = false;
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) {
+        hyper = !hyper;
+        document.body.classList.toggle('hyper', hyper);
+        showPage('page5');
+      }
+    });
+
+    // ===== Boot
+    window.addEventListener('load', () => {
+      animateIn(page1);
+      animateTitle();
+      setTimeout(startCountdown, 1200);
+    });
+  </script>
+</body>
+</html>
